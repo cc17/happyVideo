@@ -1,0 +1,22 @@
+{
+  "main": "app/index.html",
+  "name": "video",
+  "description": "demo app of node-webkit",
+  "version": "0.1.0",
+  "keywords": [ "demo", "node-webkit" ],
+  "window": {
+    "title": "happy video",
+    "icon": "link.png",
+    "toolbar": true,
+    "frame": true,
+    "width": 930,
+    "height": 500,
+    "position": "center",
+    "min_width": 400,
+    "min_height": 200,
+	"as_desktop":true
+  },
+  "webkit": {
+    "plugin": true
+  }
+}

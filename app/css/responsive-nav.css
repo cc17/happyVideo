@@ -1,0 +1,16 @@
+/*! responsive-nav.js 1.0.23 by @viljamis */
+
+.nav-collapse{
+	box-shadow:1px 1px 14px #999;
+	color: #666;
+	height: 40px;
+	background: #fff;
+	text-align: center;
+	line-height: 40px;
+}
+.nav-collapse li{
+	cursor:pointer;
+}
+.nav-collapse li:hover{
+	color:#eec902;
+}

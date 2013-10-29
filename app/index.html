@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8"/>
+	<link rel="stylesheet" type="text/css" href="css/app.css">
+	<style type="text/css">
+
+		video { height: 240px; }
+
+		/* Reset max-height when in full screen mode */
+		video:-webkit-full-screen{ height: 100%; }
+	</style>
+</head>
+<body>
+<div class="topbar yk-so-box cl">
+	<span class="fl yk-logo"><img src="images/yklogo.png"/></span>
+	<div class="search fl">
+		<form id="qheader_search" action="http://www.soku.com/search_video" method="get" target="_blank" onsubmit="return false; ">
+			<input name="q" id="headq" type="text" placeholder="请输入要查询的影片" autocomplete="off">
+			<button type="submit"><em>搜索</em></button>
+			<div id="qheader_keywords" style="display:none;">
+			<a target="_blank" href="http://www.soku.com/search_video/q_" class=""></a>
+		</div>
+		<input type="text" style="display:none;">
+		<div style="display: none;">
+			<div class="kubox" style="display:block;">
+				<iframe id="sk_holder_iframe" frameborder="0" scrolling="no" style="position: absolute; z-index: 0; top: -2px; left: -2px;"></iframe>
+				<div class="main" id="_xbox_refresh"></div>
+			</div>
+		</div>
+		</form>
+	</div>
+</div>
+<div id="nav">
+  <ul class="nav-collapse">
+    <li class="col-2-12"><span data-href="#">优酷精选</span></li>
+    <li class="col-2-12"><span data-href="#">电视剧</span></li>
+    <li class="col-2-12"><span data-href="#">电影</span></li>
+    <li class="col-2-12"><span data-href="#">综艺</span></li>
+    <li class="col-2-12"><span data-href="#">音乐</span></li>
+    <li class="col-2-12"><span data-href="#">动漫</span></li>
+  </ul>
+</div>
+<!--轮播区-->
+<ul id="hot-video" class="hot-video"></ul>
+
+
+<div id="video-title" style="text-align:center;"></div>
+<div class="player fullscreen" id="player" err="" style="">
+
+</div>
+<script type="text/javascript" src="jquery-2.0.2.js"></script>
+
+<script type="text/javascript">
+	var nodegrass = require('nodegrass');
+	var cheerio = require('cheerio');
+	var http = require('http');
+
+
+	var coverCss = [
+		'',
+		'position:fixed',
+		'top:0',
+		'left:0',
+		'bottom:0',
+		'right:0',
+		'background-color:rgba(255,255,255,0)',
+		'z-index:5',
+		'-webkit-transition:background-color 0.2s ease;',
+		'-moz-transition:background-color 0.2s ease;',
+		'-o-transition:background-color 0.2s ease;',
+		'transition:background-color 0.2s ease;',
+		'pointer-events:none',
+		''
+	];
+	var videoCss = [
+		'position:relative',
+		'z-index:6',
+		'background:#000',
+		'box-shadow:0 0 5px #333',
+		'-webkit-transition:top 1s ease;',
+		'-moz-transition:top 1s ease;',
+		'-o-transition:top 1s ease;',
+		'transition:top 1s ease;',
+		''
+	];
+	var aCss = [
+		'',
+		'position:absolute',
+		'bottom:0',
+		'left:0',
+		'right:0',
+		'height:30px;',
+		'text-align:center',
+		'font-size:14px',
+		'pointer-events:auto',
+		''
+	];
+	
+	var btnCss = [
+		'',
+		'position:absolute',
+		'top:0',
+		'height:30px;',
+		'line-height:30px',
+		'width:60px',
+		'text-align:center',
+		'font-size:14px',
+		'letter-spacing:-1px',
+		'color:#014CCC',
+		'cursor:pointer',
+		'pointer-events:auto',
+		''
+	];
+	
+	var changeBtnCss = [
+		'',
+		'position:absolute',
+		'width:500px',
+		'height:40px',
+		'top:470px',
+		'left:50%',
+		'margin-left:-250px',
+		'z-index:1000000000000',
+		'background:#000',
+		'background-image: -webkit-linear-gradient(top,#333,#000)',
+		'background-image: -moz-linear-gradient(top,#333,#000)',
+		'background-image: -ms-linear-gradient(top,#333,#000)',
+		'background-image: -o-linear-gradient(top,#333,#000)',
+		'background-image: linear-gradient(top,#333,#000)',
+		'box-shadow:0 0 5px #333',
+		'text-align:center',
+		'color:#eee',
+		'border-radius:150px',
+		'overflow:hidden',
+		''
+	];
+	
+	var changeBtnItemCss = [
+		'',
+		'display:inline-block',
+		'width:90px',
+		'height:40px',
+		'line-height:40px',
+		'font-size:20px',		
+		'cursor:pointer',
+		''
+	];
+	
+	
+	var HTML5Player = function(param){
+		var coverSrc = param.logo;
+		var mp4Src = param.mp4Src;
+		var cover = document.createElement('div');
+		cover.className = 'video-cover';
+		cover.style.cssText += coverCss.join(';');
+
+		var v = document.createElement('video');
+		v.setAttribute('height','458');
+		v.setAttribute('width','610');
+		v.setAttribute('controls','true');
+		v.setAttribute('autoplay','true');
+		v.style.cssText += videoCss.join(';');
+		v.src = mp4Src;
+		
+		
+		
+		
+		return {
+			add : function(){
+				document.body.appendChild(cover);
+				//document.body.appendChild(changeBtn);
+				$('#player').append(v);
+
+
+				var $play = $('<div class="video-play"/>').html('暂停').attr('state',1);
+				$play.css({
+					width:$(v).css('width'),
+					height:$(v).css('height')
+				});
+
+
+
+				var $body = $(document.body);
+				$body.append($play);	
+				$play.on('click',function(){
+					var state = $play.attr('state');
+					console.log(v);
+					if(state == 1){
+						v.pause();	
+						$play.html('播放');
+						$play.attr('state',0)
+					}else{
+						v.play();
+						$play.html('暂停');
+						$play.attr('state',1);
+					}
+					
+				});
+				
+				//关闭
+				var $close = $('<div style="position:absolute;top:120px;left:20px;" class="video-close"/>').html('关闭').attr('state',1);
+				$body.append($close);	
+				$close.on('click',function(){
+					$('#hot-video').show();
+					$('video').remove();
+					$('.video-cover')[0].style.cssText = '';
+				});
+
+
+				v.addEventListener('canplay',v.play);
+				//全屏
+				var $fullscreen = $('<div style="position:absolute;top:160px;right:20px;z-index:111111111111111111111111111" class="video-fullscreen"/>').html('全屏');
+				$body.append($fullscreen);	
+				$fullscreen.on('click',function(){
+					document.getElementsByTagName('video')[0]['webkitEnterFullScreen']();
+				});
+				
+				$('video').on("webkitfullscreenchange",function(){
+					$('video').css({
+						'height':"100%",
+						'width':"90%"
+					});
+				    //console.log(document.webkitIsFullScreen);
+				});
+
+				
+
+			
+			// Will return fullscreen method as a string if supported e.g. "mozRequestFullScreen" || false;
+	
+
+
+
+
+				 v.addEventListener('play',function(){
+				 	$play.attr('state',1);
+				 	$play.html('暂停');
+
+				 });
+				  v.addEventListener('pause',function(){
+				 	$play.attr('state',0);
+				 	$play.html('播放');
+				 });
+	
+
+
+				setTimeout(function(){
+					cover.style.backgroundColor = 'rgba(255,255,255,0.6)';
+					v.style.top = '-1px';
+				},100);
+			},
+			remove : function(){
+				v.pause();
+				cover.style.backgroundColor = 'rgba(255,255,255,0)';
+				v.style.top = '-500px';
+				setTimeout(function(){
+					cover.parentNode && document.body.removeChild(cover);
+					v.parentNode && document.body.removeChild(v);
+					changeBtn.parentNode && document.body.removeChild(changeBtn);
+				},1100);
+			}
+		}
+	}
+
+
+
+	
+
+	var mp4 = function(videoId,callback){
+		window._id = videoId;
+		function getFileIDMixString(seed){
+			var source = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ/\\:._-1234567890".split(''),
+				mixed = [],index;
+			for (var i=0, len = source.length; i< len;i++){
+				seed = (seed * 211 + 30031) % 65536;
+				index = Math.floor(seed/65536 * source.length);
+				mixed.push(source[index]);
+				source.splice(index,1);
+			}
+			return mixed.join('');
+		};
+		function getFileID(fileid, seed){
+			var mixed = getFileIDMixString(seed), ids= fileid.split("*"), realId = [], idx;
+			for (var i=0; i< ids.length; i++){
+				idx = parseInt(ids[i],10);
+				realId.push(mixed.charAt(idx));
+			}
+			return realId.join('');
+		};
+		$.getJSON('http://v.youku.com/player/getPlaylist/VideoIDS/' + _id + '/Pf/4?__callback=?',function(param){
+			console.log(param);
+				var d      = new Date(),
+					fileid = getFileID(param.data[0]['streamfileids']['3gphd'], param.data[0]['seed']),
+					sid    = d.getTime() + "" + (1E3 + d.getMilliseconds()) + "" + (parseInt(Math.random() * 9E3)),
+					k      = param.data[0]['segs']['3gphd'][0]['k'],
+					st     = param.data[0]['segs']['3gphd'][0]['seconds'],
+					cover = param.data[0].logo;
+					$('#video-title').html(param.data[0].title);
+				$.getJSON(
+					'http://f.youku.com/player/getFlvPath/sid/'+sid+'_00/st/mp4/fileid/'+fileid+'?K='+k+'&hd=1&myp=0&ts=1156&ypp=0&ymovie=1&callback=?',
+					function(param){
+						callback( { 'mp4Src': param[0]['server'],"logo":cover});
+				});	
+		});
+	};	
+	
+
+
+
+
+	var flashPlayer = function(){
+		var flash = document.getElementById('movie_player');
+		var flashOut = flash.parentNode;
+		return {
+			add : function(){
+				flashOut.appendChild(flash);
+			},
+			remove : function(){
+				flashOut.parentNode && flashOut.removeChild(flash);
+			}
+		}
+	}	
+
+	function fn(param){
+		window.isYoukuHTML5PlayerBookMarkCodeByZythum = window.isYoukuHTML5PlayerBookMarkCodeByZythum || {};
+		var y = window.isYoukuHTML5PlayerBookMarkCodeByZythum;
+		y.HTML5  = y.HTML5 || HTML5Player(param);
+		//y.flash = y.flash || flashPlayer();
+		y.flag = y.flag || false;
+		if(y.flag === false){
+			y.HTML5.add();
+			//$('#movie_player').remove();
+			y.flag = true;
+		}else if(y.flag === true){
+			y.HTML5.remove();
+			y.flash.add();
+			y.flag = false;
+		}
+	};
+
+
+
+	
+
+	
+	function GetVideoId(url,fn){
+		nodegrass.get(url,function(data,status,headers){
+		    console.log(status);
+		    console.log(headers);
+		    var $ = cheerio.load(data);
+		    var topic = $('#subtitle');  
+		    
+		    var videoIdMatch = data.match(/var videoId = '(\d+)'/);
+		    var videoId = videoIdMatch[1];
+		    console.log(videoId);
+		    fn(videoId);
+		},'utf8').on('error', function(e) {
+		    console.log("Got error: " + e.message);
+		});
+	};
+	//var url = window.prompt("请输入youku视频地址","url") 
+	//var url = '';
+	
+	
+	//获取首页实时推荐
+	function getHotVideo(){
+		var dtd = $.Deferred(); //在函数内部，新建一个Deferred对象
+		nodegrass.get('http://www.youku.com/',function(data,status,headers){
+		    var $ = cheerio.load(data); 
+		    var thumbs = $('.v-thumb img').slice(0,5);
+			var thumbUrls = [];
+			var videoUrl = [];
+			[].forEach.call(thumbs,function(item,i){
+				var $item = $(item);
+				thumbUrls.push($item.attr('src'));
+				var link = $item.parent().next().find('a').attr('href');
+				videoUrl.push(link);
+			});
+			dtd.resolve(thumbUrls,videoUrl);
+		},'utf8').on('error', function(e) {
+		    console.log("Got error: " + e.message);
+		});
+		return dtd.promise();
+	}
+	$.when(getHotVideo()).done(function(thumbUrls,videoUrl){
+		new Hotvideo(thumbUrls,videoUrl);
+	});
+	function Hotvideo(thumbUrls,videoUrls){
+		this.thumbUrls = thumbUrls;
+		this.videoUrls = videoUrls;
+		this.wrap = $('#hot-video');
+		this.createUi();
+		this.bindEvt();
+	};
+	Hotvideo.prototype = {
+		createUi:function(){
+			var ul = this.wrap;
+			var html = [];
+			var me = this;
+			this.thumbUrls.forEach(function(item,i){
+				html.push('<li class="hotvideo-item '+ (i == 0 ? 'item-first' : '') +'" data-href="'+ me.videoUrls[i] +'"><img src="'+ item +'"/></li>');
+			});
+			ul.html(html.join(''));
+		},
+		bindEvt:function(){
+			var $wrap = this.wrap;
+			$wrap.on('click',function(ev){
+				var $target = $(ev.target);
+				var $item = $target.closest('.hotvideo-item');
+				if($item.length > 0){
+					var href = $item.attr('data-href');
+					GetVideoId(href,function(videoId){
+						mp4(videoId,function(param){
+							fn(param);
+							$wrap.hide();
+						});
+					});
+				}
+			});
+		}
+	};
+	
+	
+
+</script>
+
+</body>
+</html>

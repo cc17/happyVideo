@@ -1,0 +1,16 @@
+.hot-video{
+	padding-left: 30px;
+}
+.hot-video li{
+	cursor:pointer;
+	float:left;
+	margin:10px 10px 0 0;
+}
+.hot-video li  img{
+	width:200px;
+	height:112px;
+}
+.hot-video li.item-first img{
+	width:448px;
+	height:252px;
+}
